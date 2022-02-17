@@ -18,9 +18,8 @@ def interpolated_prec_rec(prec, rec):
     mrec = np.hstack([[0], rec, [1]])
     for i in range(len(mprec) - 1)[::-1]:
         mprec[i] = max(mprec[i], mprec[i + 1])
-    idx = np.where(mrec[1::] != mrec[0:-1])[0] + 1
-    ap = np.sum((mrec[idx] - mrec[idx - 1]) * mprec[idx])
-    return ap
+    idx = np.where(mrec[1::] != mrec[:-1])[0] + 1
+    return np.sum((mrec[idx] - mrec[idx - 1]) * mprec[idx])
 
 def segment_iou(target_segment, candidate_segments):
     """Compute the temporal intersection over union between a
@@ -45,10 +44,7 @@ def segment_iou(target_segment, candidate_segments):
     # Segment union.
     segments_union = (candidate_segments[:, 1] - candidate_segments[:, 0]) \
       + (target_segment[1] - target_segment[0]) - segments_intersection
-    # Compute overlap as the ratio of the intersection
-    # over union of two segments.
-    tIoU = segments_intersection.astype(float) / segments_union
-    return tIoU
+    return segments_intersection.astype(float) / segments_union
 
 def wrapper_segment_iou(target_segments, candidate_segments):
     """Compute intersection over union btw segments

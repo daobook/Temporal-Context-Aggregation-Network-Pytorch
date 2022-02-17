@@ -125,7 +125,7 @@ def train_eval_handle_batch(pascal_evaluator, image_key, proposals, scores, gt_b
         boxes.append([y1, x1, y2, x2])
         labels.append(action_id)
         scores.append(score)
-    if len(scores)>0 :
+    if scores:
         try:
             add_one_detection(pascal_evaluator, image_key, boxes, labels, scores)
         except:
@@ -150,7 +150,7 @@ def train_eval_handle_batch_faster_rcnn(pascal_evaluator, image_key, proposals, 
         boxes.append([y1, x1, y2, x2])
         labels.append(action_id)
         scores.append(score)
-    if len(scores) > 0:
+    if scores:
         try:
             add_one_detection(pascal_evaluator, image_key, boxes, labels, scores)
         except:
@@ -160,9 +160,11 @@ def train_eval_handle_batch_faster_rcnn(pascal_evaluator, image_key, proposals, 
 
 def train_eval_collect_results(pascal_evaluator, frame_key_tensor, proposals, scores, gt_boxes, bin_labels):
     batch_size = len(frame_key_tensor[0])
-    image_key = []
-    for i, video_name in enumerate(frame_key_tensor[0]):
-        image_key += [(video_name, frame_key_tensor[1][i].item())]
+    image_key = [
+        (video_name, frame_key_tensor[1][i].item())
+        for i, video_name in enumerate(frame_key_tensor[0])
+    ]
+
     for i, ik in enumerate(image_key):
         train_eval_handle_batch(pascal_evaluator, ik, proposals[i, :, :], scores[i, :, :], gt_boxes[i, :, :], bin_labels[i, :, :])
 
@@ -174,9 +176,11 @@ def train_eval_collect_results_person_image(pascal_evaluator, image_key, proposa
 
 def train_eval_collect_results_faster_rcnn(pascal_evaluator, frame_key_tensor, proposals_list, scores_list,
                                            labels_list, gt_boxes, bin_labels):
-    image_key = []
-    for i, video_name in enumerate(frame_key_tensor[0]):
-        image_key += [(video_name, frame_key_tensor[1][i].item())]
+    image_key = [
+        (video_name, frame_key_tensor[1][i].item())
+        for i, video_name in enumerate(frame_key_tensor[0])
+    ]
+
     for i, ik in enumerate(image_key):
         train_eval_handle_batch_faster_rcnn(pascal_evaluator, ik, proposals_list[i], scores_list[i], labels_list[i],
                                             gt_boxes[i, :, :], bin_labels[i, :, :])
@@ -195,8 +199,7 @@ def train_eval_get_results(pascal_evaluator, write_log=None, metrics_path=None, 
             mAP = ap
             continue
         ap_dict[name] = ap
-    actions_list = list(ap_dict.keys())
-    actions_list.sort()
+    actions_list = sorted(ap_dict.keys())
     log = 'epoch:{}  frame_map: {} \n'.format(epoch, mAP)
     for action in actions_list:
         log += '{}: {}\n'.format(action, ap_dict[action])
@@ -212,6 +215,5 @@ def train_eval_get_results(pascal_evaluator, write_log=None, metrics_path=None, 
 
 
 
-if __name__ == '__main__':
-    pass
+pass
 

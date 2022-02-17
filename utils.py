@@ -30,8 +30,7 @@ def bbox_xw_transform_batch(ex_rois, gt_rois):
 
     targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
     targets_dw = torch.log(gt_widths / ex_widths)
-    targets = torch.stack((targets_dx, targets_dw), dim=1)
-    return targets
+    return torch.stack((targets_dx, targets_dw), dim=1)
 
 
 def bbox_se_transform_batch(ex_rois, gt_rois):
@@ -42,8 +41,7 @@ def bbox_se_transform_batch(ex_rois, gt_rois):
 
     targets_s = s_offset / ex_widths
     targets_e = e_offset / ex_widths
-    targets = torch.stack((targets_s, targets_e), dim=1)
-    return targets
+    return torch.stack((targets_s, targets_e), dim=1)
 
 
 def bbox_se_transform_inv(boxes, deltas, dse_w):
@@ -62,8 +60,7 @@ def batch_iou(proposals, gt_boxes):
     int_xmax = torch.min(proposals[:, 1], gt_boxes[:, 1])
     inter_len = torch.clamp(int_xmax - int_xmin, min=0.)
     union_len = len_proposals - inter_len + gt_boxes[:, 1] - gt_boxes[:, 0]
-    jaccard = inter_len / (union_len + 0.00001)
-    return jaccard
+    return inter_len / (union_len + 0.00001)
 
 
 def iou_matrix(proposals):
@@ -75,8 +72,7 @@ def iou_matrix(proposals):
     int_xmax = torch.min(p1[:, :, 1], p2[:, :, 1])
     inter_len = torch.clamp(int_xmax - int_xmin, min=0.)
     union_len = p1[:, :, 1] - p1[:, :, 0] - inter_len + p2[:, :, 1] - p2[:, :, 0]
-    jaccard = inter_len / (union_len + 0.00001)
-    return jaccard
+    return inter_len / (union_len + 0.00001)
 
 
 
@@ -87,8 +83,7 @@ def ioa_with_anchors(anchors_min, anchors_max, box_min, box_max):
     int_xmin = np.maximum(anchors_min, box_min)
     int_xmax = np.minimum(anchors_max, box_max)
     inter_len = np.maximum(int_xmax - int_xmin, 0.)
-    scores = np.divide(inter_len, len_anchors)
-    return scores
+    return np.divide(inter_len, len_anchors)
 
 
 def iou_with_anchors(anchors_min, anchors_max, box_min, box_max):
@@ -99,6 +94,4 @@ def iou_with_anchors(anchors_min, anchors_max, box_min, box_max):
     int_xmax = np.minimum(anchors_max, box_max)
     inter_len = np.maximum(int_xmax - int_xmin, 0.)
     union_len = len_anchors - inter_len + box_max - box_min
-    # print inter_len,union_len
-    jaccard = np.divide(inter_len, union_len)
-    return jaccard
+    return np.divide(inter_len, union_len)

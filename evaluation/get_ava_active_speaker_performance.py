@@ -57,7 +57,7 @@ def compute_average_precision(precision, recall):
     raise ValueError("Precision must be in the range of [0, 1].")
   if np.amin(recall) < 0 or np.amax(recall) > 1:
     raise ValueError("recall must be in the range of [0, 1].")
-  if not all(recall[i] <= recall[i + 1] for i in range(len(recall) - 1)):
+  if any(recall[i] > recall[i + 1] for i in range(len(recall) - 1)):
     raise ValueError("recall must be a non-decreasing array")
 
   recall = np.concatenate([[0], recall, [1]])
@@ -68,9 +68,8 @@ def compute_average_precision(precision, recall):
     precision[i] = np.maximum(precision[i], precision[i + 1])
 
   indices = np.where(recall[1:] != recall[:-1])[0] + 1
-  average_precision = np.sum(
+  return np.sum(
       (recall[indices] - recall[indices - 1]) * precision[indices])
-  return average_precision
 
 
 def load_csv(filename, column_names):

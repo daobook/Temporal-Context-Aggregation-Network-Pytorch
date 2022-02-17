@@ -66,7 +66,7 @@ def read_csv(csv_file, class_whitelist=None, capacity=0):
   scores = defaultdict(list)
   reader = csv.reader(csv_file)
   for row in reader:
-    assert len(row) in [7, 8], "Wrong number of columns: " + row
+    assert len(row) in {7, 8}, f'Wrong number of columns: {row}'
     image_key = make_image_key(row[0], row[1])
     x1, y1, x2, y2 = [float(n) for n in row[2:6]]
     action_id = int(row[6])
@@ -89,7 +89,7 @@ def read_csv(csv_file, class_whitelist=None, capacity=0):
       boxes[image_key].append([y1, x1, y2, x2])
       labels[image_key].append(action_id)
       scores[image_key].append(score)
-  print_time("read file " + csv_file.name, start)
+  print_time(f'read file {csv_file.name}', start)
   return boxes, labels, scores
 
 
@@ -107,7 +107,7 @@ def read_exclusions(exclusions_file):
   if exclusions_file:
     reader = csv.reader(exclusions_file)
     for row in reader:
-      assert len(row) == 2, "Expected only 2 columns, got: " + row
+      assert len(row) == 2, f'Expected only 2 columns, got: {row}'
       excluded.add(make_image_key(row[0], row[1]))
   return excluded
 

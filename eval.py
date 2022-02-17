@@ -11,8 +11,7 @@ from ipdb import set_trace
 
 def load_json(file):
     with open(file) as json_file:
-        data = json.load(json_file)
-        return data
+        return json.load(json_file)
 
 
 def write_results(log):
@@ -60,9 +59,17 @@ def plot_metric(opt, average_nr_proposals, average_recall, recall, tiou_threshol
         area_under_curve[i] = np.trapz(recall[i], average_nr_proposals)
 
     for idx, tiou in enumerate(tiou_thresholds[::2]):
-        ax.plot(average_nr_proposals, recall[2 * idx, :], color=colors[idx + 1],
-                label="tiou=[" + str(tiou) + "], area=" + str(int(area_under_curve[2 * idx] * 100) / 100.),
-                linewidth=4, linestyle='--', marker=None)
+        ax.plot(
+            average_nr_proposals,
+            recall[2 * idx, :],
+            color=colors[idx + 1],
+            label=f'tiou=[{str(tiou)}], area='
+            + str(int(area_under_curve[2 * idx] * 100) / 100.0),
+            linewidth=4,
+            linestyle='--',
+            marker=None,
+        )
+
     # Plots Average Recall vs Average number of proposals.
     ax.plot(average_nr_proposals, average_recall, color=colors[0],
             label="tiou = 0.5:0.05:0.95," + " area=" + str(

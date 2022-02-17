@@ -38,10 +38,7 @@ class ANETdetection(object):
         self.ap = None
         self.check_status = check_status
         # Retrieve blocked videos from server.
-        if self.check_status:
-            self.blocked_videos = get_blocked_videos()
-        else:
-            self.blocked_videos = list()
+        self.blocked_videos = get_blocked_videos() if self.check_status else list()
         # Import ground truth and predictions.
         self.ground_truth, self.activity_index = self._import_ground_truth(
             ground_truth_filename, classes)
@@ -74,7 +71,7 @@ class ANETdetection(object):
         with open(ground_truth_filename, 'r') as fobj:
             data = json.load(fobj)
         # Checking format
-        if not all([field in data.keys() for field in self.gt_fields]):
+        if any(field not in data.keys() for field in self.gt_fields):
             raise IOError('Please input a valid ground truth file.')
 
         # Read ground truth data.
@@ -124,7 +121,7 @@ class ANETdetection(object):
         with open(prediction_filename, 'r') as fobj:
             data = json.load(fobj)
         # Checking format...
-        if not all([field in data.keys() for field in self.pred_fields]):
+        if any(field not in data.keys() for field in self.pred_fields):
             raise IOError('Please input a valid prediction file.')
 
         # Read predictions.
@@ -146,13 +143,12 @@ class ANETdetection(object):
                 label_lst.append(label)
                 olabel_list.append(result['label'])
                 score_lst.append(result['score'])
-        prediction = pd.DataFrame({'video-id': video_lst,
+        return pd.DataFrame({'video-id': video_lst,
                                    't-start': t_start_lst,
                                    't-end': t_end_lst,
                                    'label': label_lst,
                                    'olabel': olabel_list,
                                    'score': score_lst})
-        return prediction
 
     def _get_predictions_with_label(self, prediction_by_label, label_name, cidx):
         """Get all predicitons of the given label. Return empty DataFrame if there

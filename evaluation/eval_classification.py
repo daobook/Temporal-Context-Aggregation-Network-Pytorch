@@ -64,7 +64,7 @@ class ANETclassification(object):
         with open(ground_truth_filename, 'r') as fobj:
             data = json.load(fobj)
         # Checking format
-        if not all([field in data.keys() for field in self.gt_fields]):
+        if any(field not in data.keys() for field in self.gt_fields):
             raise IOError('Please input a valid ground truth file.')
 
         # Initialize data frame
@@ -103,7 +103,7 @@ class ANETclassification(object):
         with open(prediction_filename, 'r') as fobj:
             data = json.load(fobj)
         # Checking format...
-        if not all([field in data.keys() for field in self.pred_fields]):
+        if any(field not in data.keys() for field in self.pred_fields):
             raise IOError('Please input a valid prediction file.')
 
         # Initialize data frame
@@ -116,10 +116,9 @@ class ANETclassification(object):
                 video_lst.append(videoid)
                 label_lst.append(label)
                 score_lst.append(result['score'])
-        prediction = pd.DataFrame({'video-id': video_lst,
+        return pd.DataFrame({'video-id': video_lst,
                                    'label': label_lst,
                                    'score': score_lst})
-        return prediction
 
     def wrapper_compute_average_precision(self):
         """Computes average precision for each class in the subset.
