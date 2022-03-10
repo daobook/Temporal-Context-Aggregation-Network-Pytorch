@@ -41,10 +41,7 @@ class ANETproposal(object):
         self.proposals_per_video = None
         self.check_status = check_status
         # Retrieve blocked videos from server.
-        if self.check_status:
-            self.blocked_videos = get_blocked_videos()
-        else:
-            self.blocked_videos = list()
+        self.blocked_videos = get_blocked_videos() if self.check_status else list()
         # Import ground truth and proposals.
         self.ground_truth, self.activity_index = self._import_ground_truth(
             ground_truth_filename)
@@ -77,7 +74,7 @@ class ANETproposal(object):
         with open(ground_truth_filename, 'r') as fobj:
             data = json.load(fobj)
         # Checking format
-        if not all([field in data.keys() for field in self.gt_fields]):
+        if any(field not in data.keys() for field in self.gt_fields):
             raise IOError('Please input a valid ground truth file.')
 
         # Read ground truth data.
@@ -138,7 +135,7 @@ class ANETproposal(object):
         with open(proposal_filename, 'r') as fobj:
             data = json.load(fobj)
         # Checking format...
-        if not all([field in data.keys() for field in self.pred_fields]):
+        if any(field not in data.keys() for field in self.pred_fields):
             raise IOError('Please input a valid proposal file.')
 
         # Read predictions.
@@ -157,17 +154,14 @@ class ANETproposal(object):
                 '''
                 if videoid not in ground_truth_video_list:
                     continue
-                if self.assign_class is not None and videoid not in ground_truth_video_list:
-                    continue
                 video_lst.append(videoid)
                 t_start_lst.append(float(result['segment'][0]))
                 t_end_lst.append(float(result['segment'][1]))
                 score_lst.append(result['score'])
-        proposal = pd.DataFrame({'video-id': video_lst,
+        return pd.DataFrame({'video-id': video_lst,
                                    't-start': t_start_lst,
                                    't-end': t_end_lst,
                                    'score': score_lst})
-        return proposal
 
     def evaluate(self):
         """Evaluates a proposal file. To measure the performance of a
@@ -235,7 +229,7 @@ def average_recall_vs_avg_nr_proposals(ground_truth, proposals,
     # For each video, computes tiou scores among the retrieved proposals.
     score_lst = []
     total_nr_proposals = 0
-    
+
     from ipdb import set_trace
     '''
     success_iou = [0.5, 0.6, 0.7, 0.8, 0.9]
@@ -243,8 +237,8 @@ def average_recall_vs_avg_nr_proposals(ground_truth, proposals,
     gt_cnt = []
     '''
     temporal_interval = [[0, 5], [5, 10], [10, 50], [50, 200]]
-    gt_temporal_cnt = [0 for i in range(len(temporal_interval))]
-    recall_success_temporal_cnt = [0 for i in range(len(temporal_interval))]
+    gt_temporal_cnt = [0 for _ in range(len(temporal_interval))]
+    recall_success_temporal_cnt = [0 for _ in range(len(temporal_interval))]
     for videoid in video_lst:
         # Get ground-truth instances associated to this video.
         ground_truth_videoid = ground_truth_gbvn.get_group(videoid)
@@ -357,10 +351,7 @@ def plot_recall_dict(success_iou, success_cnt, gt_cnt):
             gt_frequency += [mask.sum()]
         return gt_frequency
     def trans_bins(bins):
-        center_list = []
-        for s in range(len(bins) - 1):
-            center_list += [(bins[s] + bins[s+1])/2]
-        return center_list
+        return [(bins[s] + bins[s+1])/2 for s in range(len(bins) - 1)]
 
     def plot_statistics_result(data_list, gt_cnt, x_label, y_label, title, save_path):
         n, bins, patches = plt.hist(x=data_list, bins=20, color='#0504aa', alpha=0.7, rwidth=0.85)

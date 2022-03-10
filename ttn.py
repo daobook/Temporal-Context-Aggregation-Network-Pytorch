@@ -41,5 +41,6 @@ class TemporalTransformNetwork(nn.Module):
         theta[:, 0, 2] = (segments[:, 1] + segments[:, 0]) / 2.0
         features = features.unsqueeze(2)
         grid = F.affine_grid(theta, torch.Size((features.size(0), features.size(1), 1, out_len)))
-        stn_feature = F.grid_sample(features, grid).view(features.size(0), features.size(1), out_len)
-        return stn_feature
+        return F.grid_sample(features, grid).view(
+            features.size(0), features.size(1), out_len
+        )

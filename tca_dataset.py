@@ -72,10 +72,7 @@ class TCADataSet(data.Dataset):
             if video_name in ignore_videos:
                 self.dirty_video_cnt += 1
                 continue
-            if self.mode in "training":
-                video_info = self._filter_dirty_data(anno)
-            else:
-                video_info = anno
+            video_info = self._filter_dirty_data(anno) if self.mode in "training" else anno
             if video_info is None:
                 self.dirty_video_cnt += 1
                 continue
@@ -107,29 +104,24 @@ class TCADataSet(data.Dataset):
                 new_anno["annotations"].append(a)
             else:
                 self.dirty_instance_cnt += 1
-        if len(new_anno["annotations"]) > 0:
-            return new_anno
-        else:
-            return None
+        return new_anno if len(new_anno["annotations"]) > 0 else None
 
     def __getitem__(self, index):
         video_data, video_duration, video_name = self._load_feature(index)
         xmin, xmax, score, iou, ioa, gt_xmin, gt_xmax = self._load_proposals(video_name, video_duration)
-        meta = {}
-        if self.mode in 'training':
-            topk = 64
-        else:
-            topk = xmin.shape[0]
-            # topk = 100
+        topk = 64 if self.mode in 'training' else xmin.shape[0]
         feature, proposals, gt_boxes, feature_len, temporal_mask = self._sample_data_for_tcanet(video_data,
                                                                                                  xmin, xmax,
                                                                                                  topk,
                                                                                                  video_duration,
                                                                                                  gt_xmin, gt_xmax)
-        meta["features"] = feature
-        meta["gt_boxes"] = gt_boxes
-        meta["proposals"] = proposals
-        meta["feature_len"] = torch.tensor([feature_len])
+        meta = {
+            'features': feature,
+            'gt_boxes': gt_boxes,
+            'proposals': proposals,
+            'feature_len': torch.tensor([feature_len]),
+        }
+
         meta["video_duration"] = torch.tensor([video_duration])
         meta['temporal_mask'] = temporal_mask
         if self.mode not in 'training':
@@ -147,8 +139,12 @@ class TCADataSet(data.Dataset):
         for feature_path in feature_path_list:
             if 'hacs_segments_features' in feature_path:
                 feature = np.load(os.path.join(feature_path, self.path_prefix, video_name + ".npy"))
-                video_df = {}
-                video_df['slow_feature'] = torch.from_numpy(feature).permute(1, 0).unsqueeze(0)
+                video_df = {
+                    'slow_feature': torch.from_numpy(feature)
+                    .permute(1, 0)
+                    .unsqueeze(0)
+                }
+
                 video_df['fast_feature'] = torch.zeros(1, 0)
                 video_df['feature_frames'] = 0
             else:
@@ -211,10 +207,7 @@ class TCADataSet(data.Dataset):
             return xmin, xmax, score, iou, ioa, gt_xmin, gt_xmax
 
     def _sample_data_for_tcanet(self, feature, xmin, xmax, topk, video_duration, gt_xmin, gt_xmax):
-        if topk > xmin.shape[0]:
-            rel_topk = xmin.shape[0]
-        else:
-            rel_topk = topk
+        rel_topk = xmin.shape[0] if topk > xmin.shape[0] else topk
         feature_len = feature.size(2)
         # if self.mode in 'training':
         t_max = self.temporal_scale

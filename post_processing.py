@@ -12,8 +12,7 @@ from utils import iou_with_anchors
 
 def load_json(file):
     with open(file) as json_file:
-        data = json.load(json_file)
-        return data
+        return json.load(json_file)
 
 
 def load_pickle(path):
@@ -35,9 +34,11 @@ def getDatasetDict(opt):
         video_subset = anno['subset']
         if video_subset != subset:
             continue
-        video_new_info = {}
-        video_new_info['duration_second'] = float(anno["duration"])
-        video_new_info['annotations'] = anno['annotations']
+        video_new_info = {
+            'duration_second': float(anno["duration"]),
+            'annotations': anno['annotations'],
+        }
+
         video_dict[video_name] = video_new_info
     return video_dict
 
@@ -62,7 +63,7 @@ def soft_nms(df, alpha, t1, t2):
         tmp_iou_list = iou_with_anchors(
             np.array(tstart),
             np.array(tend), tstart[max_index], tend[max_index])
-        for idx in range(0, len(tscore)):
+        for idx in range(len(tscore)):
             if idx != max_index:
                 tmp_iou = tmp_iou_list[idx]
                 tmp_width = (tend[max_index] - tstart[max_index])
@@ -105,10 +106,14 @@ def video_post_process(opt, video_list, video_dict, prefix="BMN"):
         proposal_list = []
 
         for j in range(min(100, len(df))):
-            tmp_proposal = {}
-            tmp_proposal["score"] = df.score.values[j]
-            tmp_proposal["segment"] = [max(0, df.xmin.values[j]) * video_duration,
-                                       min(1, df.xmax.values[j]) * video_duration]
+            tmp_proposal = {
+                'score': df.score.values[j],
+                'segment': [
+                    max(0, df.xmin.values[j]) * video_duration,
+                    min(1, df.xmax.values[j]) * video_duration,
+                ],
+            }
+
             proposal_list.append(tmp_proposal)
         result_dict[video_name] = proposal_list
 
@@ -144,9 +149,8 @@ def BMN_post_processing(opt, prefix="BMN"):
 
     result_dict = dict(result_dict)
     output_dict = {"results": result_dict}
-    outfile = open(opt["proposals_result_file"], "w")
-    json.dump(output_dict, outfile)
-    outfile.close()
+    with open(opt["proposals_result_file"], "w") as outfile:
+        json.dump(output_dict, outfile)
     if opt["output_detection_result"] != "False":
         save_detection_result(opt, result_dict)
 
@@ -183,10 +187,12 @@ def save_detection_result(opt, proposals_dict):
         topk_result_list.sort(key=lambda x: x[0], reverse=True)
         result_list = []
         for i in range(min(max_det_result, len(topk_result_list))):
-            tmp_detection = {}
-            tmp_detection["label"] = topk_result_list[i][1]
-            tmp_detection["score"] = topk_result_list[i][0]
-            tmp_detection["segment"] = topk_result_list[i][2]
+            tmp_detection = {
+                'label': topk_result_list[i][1],
+                'score': topk_result_list[i][0],
+                'segment': topk_result_list[i][2],
+            }
+
             result_list += [tmp_detection]
         detection_result_dict[video_name] = result_list
         '''

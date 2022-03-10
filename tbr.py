@@ -37,8 +37,7 @@ class StartEndRegression(nn.Module):
     def forward(self, starts_feature, ends_feature):
         start_reg = self.start_reg_conv(starts_feature)
         end_reg = self.end_reg_conv(ends_feature)
-        se_reg = torch.cat([start_reg, end_reg], dim=1).squeeze(2)
-        return se_reg
+        return torch.cat([start_reg, end_reg], dim=1).squeeze(2)
 
 
 class CenterWidthRegression(nn.Module):
@@ -61,8 +60,7 @@ class CenterWidthRegression(nn.Module):
 
     def forward(self, x):
         rbf = self.reg_1d_b(x)
-        regression = self.reg_1d_o(rbf)
-        return regression
+        return self.reg_1d_o(rbf)
 
 
 class TemporalBoundaryRegressor(nn.Module):

@@ -23,7 +23,16 @@ class TCANet(nn.Module):
         self.tbr3 = TemporalBoundaryRegressor(opt)
 
         self.lgtes = nn.ModuleList(
-            [LocalGlobalTemporalEncoder(self.hidden_dim_1d, 0.1, opt['temporal_scale'], opt['window_size']) for i in range(self.lgte_num)])
+            [
+                LocalGlobalTemporalEncoder(
+                    self.hidden_dim_1d,
+                    0.1,
+                    opt['temporal_scale'],
+                    opt['window_size'],
+                )
+                for _ in range(self.lgte_num)
+            ]
+        )
 
     def forward(self, x):
         features, video_second, proposals, gt_boxes, temporal_mask = x
@@ -54,18 +63,23 @@ class TCANet(nn.Module):
         preds_iou2, proposals2, rloss2, iloss2 = self.tbr2(proposals1, features, video_sec, gt_boxes, 0.6, training)
         preds_iou3, proposals3, rloss3, iloss3 = self.tbr3(proposals2, features, video_sec, gt_boxes, 0.7, training)
 
-        if training:
-            loss_meta = {"rloss1": rloss1, "rloss2": rloss2, "rloss3": rloss3,
-                         "iloss1": iloss1, "iloss2": iloss2, "iloss3": iloss3,
-                         "total_loss": rloss1 + rloss2 + rloss3 + iloss1 + iloss2 + iloss3}
-            if torch.isnan(loss_meta["total_loss"]):
-                from ipdb import set_trace
-                set_trace()
-            return loss_meta
-        else:
-            preds_meta = {"proposals1": proposals1, "proposals2": proposals2, "proposals3": proposals3,
-                          "iou1": preds_iou1.view(-1), "iou2": preds_iou2.view(-1), "iou3": preds_iou3.view(-1)}
-            return preds_meta
+        if not training:
+            return {
+                "proposals1": proposals1,
+                "proposals2": proposals2,
+                "proposals3": proposals3,
+                "iou1": preds_iou1.view(-1),
+                "iou2": preds_iou2.view(-1),
+                "iou3": preds_iou3.view(-1),
+            }
+
+        loss_meta = {"rloss1": rloss1, "rloss2": rloss2, "rloss3": rloss3,
+                     "iloss1": iloss1, "iloss2": iloss2, "iloss3": iloss3,
+                     "total_loss": rloss1 + rloss2 + rloss3 + iloss1 + iloss2 + iloss3}
+        if torch.isnan(loss_meta["total_loss"]):
+            from ipdb import set_trace
+            set_trace()
+        return loss_meta
 
 
 

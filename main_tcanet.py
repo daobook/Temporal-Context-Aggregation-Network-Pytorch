@@ -322,15 +322,6 @@ def TCA_inference(opt):
                 os.path.join(opt["checkpoint_path"], "TCA_results", video_name + ".csv"),
                 index=False)
             current_iter = n_iter
-            if current_iter % log_period == 0 and False:
-                derta = time.time() - time_start
-                avg_time = derta / (current_iter + 1)
-                end_time = time.time() + avg_time * (total_iter - current_iter + 1)
-                print(
-                    "TCA inference iter %d/%d   until:%s" % (
-                        current_iter + 1, total_iter,
-                        time.asctime(time.localtime(end_time))
-                    ))
 
 
 def main(opt):
@@ -347,10 +338,11 @@ def main(opt):
         print("Post processing start")
         TCA_post_processing(opt)
         print("Post processing finished")
-        if 'test' not in opt['inference_dataset']:
-            # evaluation_proposal(opt)
-            if opt["output_detection_result"] != "False":
-                evaluation_detection(opt)
+        if (
+            'test' not in opt['inference_dataset']
+            and opt["output_detection_result"] != "False"
+        ):
+            evaluation_detection(opt)
     else:
         raise ValueError("mode {} not implated!".format(opt["mode"]))
 
@@ -371,9 +363,8 @@ if __name__ == '__main__':
 
     if not os.path.exists(opt["checkpoint_path"]):
         os.makedirs(opt["checkpoint_path"])
-    opt_file = open(os.path.join(opt["checkpoint_path"], "opts.json"), "w")
-    json.dump(opt, opt_file)
-    opt_file.close()
+    with open(os.path.join(opt["checkpoint_path"], "opts.json"), "w") as opt_file:
+        json.dump(opt, opt_file)
     if not os.path.exists(os.path.join(opt["checkpoint_path"], "TCA_results")):
         os.makedirs(os.path.join(opt["checkpoint_path"], "TCA_results"))
     opt['proposals_result_file'] = os.path.join(opt["checkpoint_path"],
